@@ -1,0 +1,40 @@
+#ersvp-events-registration-form input,
+#ersvp-events-registration-form textarea {
+  	display: block;
+  	margin: 0.5em 0;
+  	margin: 10px 0;
+  	padding: 0.5em;
+  	padding: 10px;
+  	width: 100%;
+}
+
+ #ersvp-events-registration-form input[type="checkbox"] {
+  	display: inline;
+  	max-width: initial;
+  	width: initial;
+}
+
+#ersvp-events-registration-form input[type="submit"] {
+  	padding: 20px 10px;
+  	padding: 1em 0.5em;
+}
+
+.ersvp-alert {
+  	border-radius: 4px;
+  	border: 1px solid transparent;
+  	margin-bottom: 1em;
+  	padding: 15px;
+  	padding: 0.5em;
+}
+
+.ersvp-alert-success {
+	color: #3c763d;
+  	background-color: #dff0d8;
+  	border-color: #d6e9c6;
+}
+
+.ersvp-alert-info {
+	color: #31708f;
+	background-color: #d9edf7;
+	border-color: #bce8f1;
+}
