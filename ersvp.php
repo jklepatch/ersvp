@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: ERSVP
-Plugin URI: http://julienklepatch.com
-Description: Easily create an RSVP form and manage registrations
+Plugin Name: Events RSVP
+Plugin URI: github.com/jklepatch/ersvp
 Author: Julien Klepatch
-Version: 1.0
 Author URI: http://julienklepatch.com
+Description: Easily create an RSVP form and manage registrations
+Version: 1.0
 */
 
 /*  Copyright 2015 Julien Klepatch.  (email : julien@julienklepatch.com)
