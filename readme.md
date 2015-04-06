@@ -2,8 +2,6 @@
 
 #### Easily create an RSVP form and manage registrations on WordPress 
 
-![Front-end form](https://github.com/jklepatch/ersvp/raw/master/front-end.png)
-
 ![Back-end admin](https://github.com/jklepatch/ersvp/raw/master/back-end.png)
 
 Events RSVP is a plugin to create RSVP forms for events and manage registrations.
