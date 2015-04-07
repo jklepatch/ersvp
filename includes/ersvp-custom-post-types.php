@@ -148,33 +148,36 @@ function ersvp_add_registrations_metabox() {
 
 	//Display the list of registration attached to the event in a table
 	echo '<table class="form-table widefat">';
-	echo '<thead><tr><th scope="col" class="ersvp-th">Delete</th><th scope="col" class="ersvp-th">Name</th><th scope="col" class="ersvp-th">Email</th><th scope="col" class="ersvp-th">Phone</th><th scope="col" class="ersvp-th">Additional_info</th><th scope="col" class="ersvp-th">Date</th><th scope="col" class="ersvp-th">Waiting List</th></tr></thead>';
+	echo '<thead><tr><th scope="col" class="ersvp-th">Delete</th><th scope="col" class="ersvp-th">Name</th><th scope="col" class="ersvp-th">Email</th><th scope="col" class="ersvp-th">Phone</th><th scope="col" class="ersvp-th">Additional info</th><th scope="col" class="ersvp-th">Date</th><th scope="col" class="ersvp-th">Waiting List</th></tr></thead>';
 	echo '<tbody>';
 		$i = 1;
-		foreach($registrations as $registration ) {
-      		// $registration_id = $registration->ID;
+		$date_format = get_option('date_format');
+		foreach( $registrations as $registration ) {
 
       		//Get the data for each registration
-			$name            = get_post_meta( $registration->ID, 'name', true );
-			$email           = get_post_meta( $registration->ID, 'email', true );
-			$phone           = get_post_meta( $registration->ID, 'phone', true );
-			$additional_info = get_post_meta( $registration->ID, 'additional_info', true );
-      		$is_waiting_list = get_post_meta( $registration->ID, 'waiting_list', true );
+      		$post_meta = get_post_meta( $registration->ID );
 
       		//prepare classes and some html fragments
-			$waiting_list_class = ( $is_waiting_list === 'yes'  ) ? 'ersvp-waiting-list' : '';
-			$alternate          = ($i % 2 === 0 ) ? '' : 'alternate';
-      		$checkbox           = "<input id=\"cb_{$registration_id}\" type=\"checkbox\" name=\"cb_{$registration->ID}\" value=\"cb_{$registration->ID}\">";
+			$waiting_list_class  = ( 'yes' === $post_meta['waiting_list'][0] ) ? 'ersvp-waiting-list' : '';
+			$alternate_class     = ( $i % 2 === 0 ) ? '' : 'alternate';
+      		$checkbox            = "<input id=\"cb_{$registration->ID}\" type=\"checkbox\" name=\"cb_{$registration->ID}\" value=\"cb_{$registration->ID}\">";
 
       		//Display the row will registration information
-			printf("<tr class=\"%s\"><th scope=\"row\" class=\"check-column\">%s</th><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>", $alternate . ' ' . $waiting_list_class, $checkbox, $name, $email, $phone, $additional_info, $registration->post_date, $is_waiting_list );
+			printf("<tr class=\"%s\"><th scope=\"row\" class=\"check-column\">%s</th><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>", esc_attr( $alternate_class . ' ' . $waiting_list_class ), $checkbox, esc_html( $post_meta['name'][0] ), esc_html( $post_meta['email'][0] ), esc_html( $post_meta['phone'][0] ), esc_html( $post_meta['additional_info'][0] ),  esc_html( mysql2date( $date_format, $registration->post_date ) ),  esc_html( $post_meta['waiting_list'][0] ) );
 			++$i;
 		}
 
 	echo '</tbody></table>';
 }
 
-
+/**
+ * @since 1.0
+ *
+ * Update or save a ersvp custom post type 
+ * 
+ * @param  (int) $post_id ID of the post to be saved/updated
+ * @return (void)
+ */
 function ersvp_save( $post_id ) {
 
 	// If this is just a revision, don't send the email.
@@ -184,47 +187,51 @@ function ersvp_save( $post_id ) {
 	if ( !current_user_can( 'edit_post', $post_id ))
 		return $post_id;
 
+	//Get new data
+  	$date                  = isset( $_POST['date'] )              ? sanitize_text_field( $_POST['date'] )  : '';
+  	$max_registrations     = isset( $_POST['max_registrations'] ) ? abs( $_POST['max_registrations'] )     : '';
 
-  $date = isset( $_POST['date'] ) ? $_POST['date'] : '';
-  $max_registrations = isset( $_POST['max_registrations'] ) ? $_POST['max_registrations'] : '';
-  $old_max_registrations = get_post_meta( $post_id, 'max_registrations', true );
-  $args = array( 'post_type' => 'ersvp-registration', 'status' => 'publish', 'post_parent' => $post_id, 'order' => 'ASC', 'posts_per_page' => -1  ); 
-  $registrations = get_posts( $args );
+  	//Get old max registration
+  	$old_max_registrations = get_post_meta( $post_id, 'max_registrations', true );
+	
+  	//Get registrations attached to this post
+  	$args = array( 
+  		'post_type' => 'ersvp-registration', 
+  		'status'    => 'publish', 'post_parent' => $post_id, 
+  		'order'     => 'ASC', 'posts_per_page' => -1  
+  	); 
+  	$registrations = get_posts( $args );
+	
+  	//Delete post checked for deletion
+  	$was_a_deletion = false;
+  	foreach( $registrations as $key => $registration ) {
+  	  	$registration_ID = $registration->ID;
+  	  	if( true == $_POST['cb_' . $registration_ID] ) {
+  	  	  	wp_delete_post( $registration_ID, true );
+  	  	  	unset( $registrations[ $key ] );
+  	  	  	$was_a_deletion = true;
+  	  	}
+ 	}
 
-  //Delete post checked for deletion
-  $was_a_deletion = false;
-  foreach(  $registrations as $key => $registration ) {
-    $registration_ID = $registration->ID;
-    if( $_POST['cb_' . $registration_ID] == true ) {
-      wp_delete_post( $registration_ID, true );
-      unset( $registrations[ $key ] );
-      $was_a_deletion = true;
-    }
-  }
- // wp_redirect( 'http://julienklepatch.com/chinahash/wp-admin/post.php?myvar="rwrw"' );
- // exit;
-  //Update waiting_list field (if registration data changed, need to update it) and notify status change to attendee
+  	//Update waiting_list field (if registration data changed, need to update it) and notify status change to attendee
 	if( ersvp_has_registration_data_changed( $was_a_deletion, $old_max_registrations, $max_registrations ) ) {
-    // die();
-    // wp_redirect( 'http://julienklepatch.com/chinahash/wp-admin/post.php?myvar="rwrwrw"' );
-    // exit;
 		$i = 0;
 		foreach( $registrations as $registration ) {
-      $waiting_list = get_post_meta( $registration->ID, 'waiting_list', true );
-      if( $i < $max_registrations ) {
-        if( $waiting_list === 'yes' ) {
-          $name = get_post_meta( $registration->ID, 'name', true );
-          $email = get_post_meta( $registration->ID, 'email', true );
-				  update_post_meta( $registration->ID, 'waiting_list', 'no' );
-          ersvp_notify_attendee( $name, $email, 'registration' );
-        }
-			} else {
-         if( $waiting_list === 'no' ) {
-          $name = get_post_meta( $registration->ID, 'name', true );
-          $email = get_post_meta( $registration->ID, 'email', true );
-          update_post_meta( $registration->ID, 'waiting_list', 'yes' );
-          ersvp_notify_attendee( $name, $email, 'waiting_list' );
-        }
+      		$waiting_list = get_post_meta( $registration->ID, 'waiting_list', true );
+
+      		//There is still room and attendee is on the waiting list, need to switch to registered for the event
+      		if( $i < $max_registrations && $waiting_list === 'yes' ) {
+  		    	$name  = get_post_meta( $registration->ID, 'name', true );
+  		    	$email = get_post_meta( $registration->ID, 'email', true );
+				update_post_meta( $registration->ID, 'waiting_list', 'no' );
+  		    	ersvp_notify_attendee( $name, $email, 'registration' );
+
+  		    //Event is full and attendee is registered, need to switch him/her to waiting list
+			} elseif( $i >= $max_registrations && $waiting_list === 'no' ) {
+  		    	$name  = get_post_meta( $registration->ID, 'name', true );
+  		    	$email = get_post_meta( $registration->ID, 'email', true );
+  		    	update_post_meta( $registration->ID, 'waiting_list', 'yes' );
+  		    	ersvp_notify_attendee( $name, $email, 'waiting_list' );
 			}
 			$i = $i + 1;
 		}
@@ -232,11 +239,12 @@ function ersvp_save( $post_id ) {
 
 	update_post_meta($post_id, 'date', $date );
 	update_post_meta($post_id, 'max_registrations', $max_registrations );
-
 }
 add_action( 'save_post', 'ersvp_save' );
 
 /**
+ * @since 1.0
+ *
  * Helper function to determine if a registration status has changed
  *
  * If it returns true, other functions use this information to

@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *  */
 function ersvp_submit_registration() {
 	
-	//If the right $_POST['action'] is not setup or if the nounce is wrong, exit
+	//If the right $_POST['action'] is not setup or if the nounce is inexistent or wrong, exit
  	if( ! isset( $_POST['action'] ) || $_POST['action'] <> 'ersvp_submit_registration' ) {
  	  return;
  	}	
@@ -39,11 +39,11 @@ function ersvp_submit_registration() {
  	}
 
  	//Sanitize form inputs
-  	$name            = strip_tags( $_POST['name'] );
-  	$email           = strip_tags( $_POST['email'] );
-  	$phone           = strip_tags( $_POST['phone'] );
-  	$additional_info = strip_tags( $_POST['additional_info'] );
-    $event_id        = strip_tags( $_POST['event_id'] );
+  	$name            = isset( $_POST['name'] )            ? sanitize_text_field( ( $_POST['name'] ) )            : '';
+  	$email           = isset( $_POST['email'] )           ? sanitize_email( ( $_POST['email'] ) )                : '';
+  	$phone           = isset( $_POST['phone'] )           ? sanitize_text_field( ( $_POST['phone'] ) )           : '';
+  	$additional_info = isset( $_POST['additional_info'] ) ? sanitize_text_field( ( $_POST['additional_info'] ) ) : '';
+  	$event_id        = isset( $_POST['event_id'] )        ? abs( ( $_POST['event_id'] ) )                        : '';
 
     //Check if event is not full
 	if( ! ersvp_is_full( $event_id ) ) {
